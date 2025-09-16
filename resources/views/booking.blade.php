@@ -52,11 +52,12 @@
             <!-- Ruangan -->
             <div class="col-md-6">
                 <label for="ruangan" class="form-label">Ruangan</label>
-                <select class="form-select" id="ruangan" name="ruangan" required>
+                <!-- <input type="text" class="form-control" id="ruangan" name="ruangan" required> -->
+                <select class="form-select" id="ruangan" name="id_ruangan" required>
                     <option selected disabled value="">Pilih Ruangan...</option>
-                    <option value="Ruangan A">Ruangan A</option>
-                    <option value="Ruangan B">Ruangan B</option>
-                    <option value="Ruangan C">Ruangan C</option>
+                    @foreach($id_ruangan as $room)
+                        <option value="{{ $room->id }}">{{ $room->nama_ruangan }}</option>
+                    @endforeach
                 </select>
             </div>
 
@@ -78,15 +79,17 @@
                 <input type="datetime-local" class="form-control" id="waktuSelesai" name="waktuSelesai" required>
             </div>
 
-            <!-- Status -->
+            <!-- Jumlah_orang -->
             <div class="col-md-6">
-                <label for="status" class="form-label">Status</label>
-                <select class="form-select" id="status" name="status" required>
+                <label for="status" class="form-label">Jumlah Orang</label>
+                <input type="text" class="form-control" id="jumlah_orang" name="jumlah_orang" placeholder="Masukkan jumlah orang" required>
+
+                <!-- <select class="form-select" id="status" name="status" required>
                     <option selected disabled value="">Pilih Status...</option>
                     <option value="reserved">Reserved</option>
                     <option value="confirm">Confirm</option>
                     <option value="cancel">Cancel</option>
-                </select>
+                </select> -->
             </div>
 
             <!-- Submit -->

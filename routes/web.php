@@ -34,4 +34,7 @@ Route::get('/admin', function () {
 Route::get('/booking', [BookingController::class, 'create']); // menampilkan form
 Route::post('/booking', [BookingController::class, 'store']);  // menyimpan ke database
 Route::get('/bookingdb/kalender', [BookingController::class, 'getKalender']);
+Route::get('/bookingdb/kalender', [BookingController::class, 'getBookingTable']);
+
+
 

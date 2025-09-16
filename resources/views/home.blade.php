@@ -13,16 +13,8 @@
     @include('partials.navbar')
 
     <div class="container-fluid px-5 py-4 mt-5">
-        <!-- Pilih Ruangan -->
-        <div class="d-flex justify-content-start mb-4">
-            <select id="ruanganPicker" class="form-select w-auto me-2">
-                <option value="ruangan A">Ruangan A</option>
-                <option value="ruangan B">Ruangan B</option>
-                <option value="ruangan C">Ruangan C</option>
-            </select>
-        </div>
 
-        <!-- Dropdown Pilih Bulan -->
+        <!-- Dropdown Pilih Bulan & Tahun -->
         <div class="d-flex justify-content-start mb-4">
             <select id="bulanPicker" class="form-select w-auto me-2">
                 <option value="0">Januari</option>
@@ -38,37 +30,37 @@
                 <option value="10">November</option>
                 <option value="11">Desember</option>
             </select>
-            <select id="tahunPicker" class="form-select w-auto">
-                <!-- JS akan isi range tahun -->
-            </select>
+            <select id="tahunPicker" class="form-select w-auto"></select>
         </div>
 
-        <!-- Kalender -->
+        <!-- Tabel Booking -->
         <div class="table-responsive shadow rounded">
-            <table id="kalender" class="table table-bordered text-start" style="table-layout: fixed;">
-                <thead class="bg-white text-dark">
+            <table id="bookingTable" class="table table-bordered text-start">
+                <thead class="bg-dark text-white">
                     <tr>
-                        <th class="text-center fw-semibold">Senin</th>
-                        <th class="text-center fw-semibold">Selasa</th>
-                        <th class="text-center fw-semibold">Rabu</th>
-                        <th class="text-center fw-semibold">Kamis</th>
-                        <th class="text-center fw-semibold">Jumat</th>
-                        <th class="text-center fw-semibold bg-light">Sabtu</th>
-                        <th class="text-center fw-semibold bg-light">Minggu</th>
+                        <th>No</th>
+                        <th>Jam Mulai</th>
+                        <th>Jam Selesai</th>
+                        <th>Ruangan</th>
+                        <th>Departemen</th>
+                        <th>Jumlah Orang</th>
                     </tr>
                 </thead>
-                <tbody id="kalenderBody"></tbody>
+                <tbody id="bookingBody">
+                    <tr>
+                        <td colspan="6" class="text-center">Memuat data...</td>
+                    </tr>
+                </tbody>
             </table>
         </div>
     </div>
 
     <script>
-        
-        const kalenderBody = document.getElementById("kalenderBody");
+        const bookingBody = document.getElementById("bookingBody");
         const bulanPicker = document.getElementById("bulanPicker");
         const tahunPicker = document.getElementById("tahunPicker");
 
-        // Isi tahun (misalnya 2020–2030)
+        // Isi tahun (misal 2020–2030)
         const thisYear = new Date().getFullYear();
         for (let y = thisYear - 2; y <= thisYear + 5; y++) {
             let opt = document.createElement("option");
@@ -78,59 +70,54 @@
             tahunPicker.appendChild(opt);
         }
 
-        // Fungsi render kalender
-        async function renderKalender() {
-            const bulan = parseInt(document.getElementById('bulanPicker').value);
-            const tahun = parseInt(document.getElementById('tahunPicker').value);
-            const ruangan = document.getElementById('ruanganPicker').value;
-            const kalenderBody = document.getElementById('kalenderBody');
+        const thisMonth = new Date().getMonth();
+        bulanPicker.value = thisMonth;
 
-            kalenderBody.innerHTML = "";
+        // Render tabel booking
+        async function renderBooking() {
+            const bulan = parseInt(bulanPicker.value);
+            const tahun = parseInt(tahunPicker.value);
 
-            // Fetch data dari Laravel
-            const res = await fetch(`/bookingdb/kalender?bulan=${bulan+1}&tahun=${tahun}&ruangan=${ruangan}`);
-            const dataBooking = await res.json();
+            bookingBody.innerHTML = `<tr><td colspan="6" class="text-center">Memuat data...</td></tr>`;
 
-            const firstDay = new Date(tahun, bulan, 1);
-            const lastDay = new Date(tahun, bulan + 1, 0);
-            const startDay = (firstDay.getDay() + 6) % 7; // Senin=0
-            let date = 1;
+            try {
+                const res = await fetch(`/bookingdb/kalender?bulan=${bulan+1}&tahun=${tahun}`);
+                console.log('Response status:', res.status); // lihat status HTTP
 
-            for (let i = 0; i < 6; i++) {
-                let row = document.createElement("tr");
-                for (let j = 0; j < 7; j++) {
-                    let cell = document.createElement("td");
-                    cell.style.height = "100px";
-                    cell.style.verticalAlign = "top";
-                    cell.style.textAlign = "left";
-                    cell.style.padding = "5px";
+                const dataBooking = await res.json();
+                console.log('Data booking:', dataBooking);
 
-                    if (i === 0 && j < startDay) {
-                        cell.innerHTML = "";
-                    } else if (date > lastDay.getDate()) {
-                        cell.innerHTML = "";
-                    } else {
-                        let tanggal = `${tahun}-${String(bulan + 1).padStart(2,'0')}-${String(date).padStart(2,'0')}`;
-                        let isi = `<strong>${date}</strong>`;
-                        if (dataBooking[tanggal]) {
-                            isi += `<br><span class="badge bg-primary">${dataBooking[tanggal]}</span>`;
-                        }
-                        cell.innerHTML = isi;
-                        date++;
-                    }
-                    row.appendChild(cell);
+
+                if (dataBooking.length === 0) {
+                    bookingBody.innerHTML = `<tr><td colspan="6" class="text-center">Belum ada booking</td></tr>`;
+                    return;
                 }
-                kalenderBody.appendChild(row);
+
+                bookingBody.innerHTML = "";
+                dataBooking.forEach((booking, index) => {
+                    const row = document.createElement("tr");
+                    row.innerHTML = `
+                        <td>${index + 1}</td>
+                        <td>${booking.waktuMulai}</td>
+                        <td>${booking.waktuSelesai}</td>
+                        <td>${booking.ruangan}</td>
+                        <td>${booking.divisi}</td>
+                        <td>${booking.jumlah_orang}</td>
+                    `;
+                    bookingBody.appendChild(row);
+                });
+            } catch (error) {
+                bookingBody.innerHTML = `<tr><td colspan="6" class="text-center text-danger">Gagal memuat data</td></tr>`;
+                console.error(error);
             }
         }
 
         // Event listener
-        document.getElementById('bulanPicker').addEventListener('change', renderKalender);
-        document.getElementById('tahunPicker').addEventListener('change', renderKalender);
-        document.getElementById('ruanganPicker').addEventListener('change', renderKalender);
+        bulanPicker.addEventListener('change', renderBooking);
+        tahunPicker.addEventListener('change', renderBooking);
 
         // Render awal
-        renderKalender();
+        renderBooking();
     </script>
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
@@ -138,5 +125,8 @@
     {{-- Footer --}}
     @include('partials.footer')
 </body>
+
+
+
 
 </html>

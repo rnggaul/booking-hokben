@@ -12,11 +12,11 @@ class Booking extends Model
     protected $table = 'booking'; // nama tabel sesuai DB
 
     protected $fillable = [
-        'ruangan',
+        'id_ruangan',
         'divisi',
         'waktuMulai',
         'waktuSelesai',
-        'status',
+        'jumlah_orang'
     ];
     public $timestamps = false; 
 
